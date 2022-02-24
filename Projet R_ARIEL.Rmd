@@ -1,0 +1,466 @@
+---
+title: "Projet R"
+author: "Ariel"
+date: "28/01/2022"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+
+```{r}
+ wh <- read.csv("~/Meine Unterlagen/Skool/Cour/Semestre1/R/Projet R/worldHappinessReport.csv")
+
+```
+
+```{r}
+wh$Happiness = as.numeric(wh$Happiness)
+wh$GDP = as.numeric(wh$GDP)
+wh$SocialSupport = as.numeric(wh$SocialSupport)
+wh$Health = as.numeric(wh$Health)
+wh$Freedom = as.numeric(wh$Freedom)
+wh$Generosity = as.numeric(wh$Generosity)
+wh$Corruption = as.numeric(wh$Corruption)
+wh$PositiveAffect = as.numeric(wh$PositiveAffect)
+wh$NegativeAffect = as.numeric(wh$NegativeAffect)
+wh$ConfidenceInGovernment = as.numeric(wh$ConfidenceInGovernment)
+```
+
+## A
+
+Comme outils de reporting je vais utiliser SmartEDA et dlookr  
+
+```{r}
+#library(SmartEDA)
+#ExpReport(  wh, Target="c" label=NULL, op_file="Report.html", op_dir=getwd())
+
+```
+
+SmartEDA me donne un reporting général sur les données
+
+```{r}
+
+#library(dlookr)
+#diagnose_paged_report(wh, output_format = c("pdf", "html"))
+```
+
+dlookr me donne une meilleur vu sur les données aberantes
+
+## B
+
+Le GDP(gross domestic product) se qui est l'équivalent du PIB en français qui est le 
+
+pouvoir d'achat d'une population. Le rapport qu'on obtient avec dlookr nous donne 5 
+
+variables aberrantes qui sont corruption, freedom, negative effect, social support et 
+
+
+generosity. Quand on parle de variabe aberrantes on parles de données qui ne comporte pas 
+
+comme les autres ou qui ont un comportement different des autres variables. 
+
+
+```{r}
+summary(wh$GDP)
+```
+
+
+```{r}
+hist(wh$GDP)
+```
+
+Nous observons que nous avons très peut de pays ayant un GDP de 6 dollar se qui peut etre 
+
+cosiderer comme une donnée aberrantes. 
+
+
+D'après le diagram si déssus le variable GDP peut suivre une lois normal.
+
+Nous allons éffectuer un test de normalité pour vérifier notre hypothèse 
+
+
+
+```{r}
+shapiro.test(wh$GDP)
+```
+
+Le test de normalié de Shapiro_Wilk que nous venons d'éfectuer nous montre que le 
+
+p-value est inférieur 0,05 donc GDP ne suis pas la loi normal
+
+
+```{r}
+t.test(wh$GDP,conf.level=0.9)$conf.int
+```
+
+Nous obtenons l’intervalle de confiance [9.132107 ; 9.464388] de niveau de
+confiance 0.9 pour la moyenne.
+
+
+```{r}
+library(dplyr)
+slice_max(wh, GDP, n=10)
+```
+
+```{r}
+wh_m = wh%>%
+  group_by(Region)%>%
+  summarize(mean(GDP, na.rm=TRUE))
+wh_m
+```
+
+
+```{r}
+barplot(c(by(data = wh$GDP, INDICES = wh$Region, FUN  = mean, na.rm = T)), col = rainbow(10),)
+```
+
+```{r}
+pie(c(by(data = wh$GDP, INDICES = wh$Region, FUN  = mean, na.rm = T)), col = rainbow(10),)
+```
+
+
+
+Nous constatons que la moyenne des GDP dans les differentes regions du mondes est diférent
+
+et qu'elle est particuierement faible e afrique sub-saharien avec une moyenne de 7.86 
+
+dollar et  une moyenne supérieur a 10 dollar en Amerique du north, en europe de l'ouest et 
+Australie et Nouvelle zeland
+
+## C
+
+```{r}
+table(wh$Region)
+```
+```{r}
+prop.table(table(wh$Region))
+```
+```{r}
+pie(table(wh$Region), col=rainbow(10))
+```
+Nous remarquon que l'armerique du nord et l'autralie et la nouvelle zelande sont très peu 
+
+réprésenté, par contre l'afrique,l'europe sont assez bien réprésenté. Se graphique nous 
+
+montre le nombre de pays impliqué dans se sondage
+
+
+```{r}
+table(wh$Country)
+```
+Nous remarquon que chaque pays est réprésenté une seul fois se qui nous confirm qu'il nya 
+
+doublons 
+
+
+```{r}
+summary(wh$PositiveAffect, na.rm=TRUE)
+```
+```{r}
+hist(wh$PositiveAffect)
+```
+
+
+Nous remarquons qu'il y'a très peut de régions où les population on un faible potitive 
+
+effect de 0,4 et 0,5 et il y'a aussi très peut de pays où cette valeur atteint 0.9. 
+
+Nous pouvons donc déuire que les populations de la plus part de pays dans cette base de
+
+données sont heureux comme ils doivent l'etre.
+
+```{r}
+boxplot(wh$PositiveAffect)$out
+```
+Le boxplot et le histogral ci-dessus nous montre que le variable positive effetct n'a pas 
+
+de données aberantes se qui nous indique qu'il n'y a pas de région ou de pays où la 
+
+valeur de positive effect est très petite en comparaison aux autre pays. 
+```{r}
+summary(wh$NegativeAffect)
+```
+
+```{r}
+boxplot(wh$NegativeAffect)$out
+```
+Nous avons trois valeur aberants qui sont  0.5993355, 0.5382454, 0.5905387
+
+Et nous pouvons verifier sa avec un histogram
+
+
+```{r}
+hist(wh$NegativeAffect)
+```
+
+
+### Association entre variables categorielle
+
+
+```{r}
+trg = table(wh$Country,wh$Region)
+barplot(trg, col = rainbow(10))
+
+```
+```{r}
+pie(table(wh$Region), col = rainbow(10))
+```
+
+Le diagram de bar est ci-dessus accompagner du diagram circulaie nous permet ne mieux 
+
+comprendre la rélation entre les pays et ls régions. 
+
+
+```{r}
+
+chisq.test(trg)
+
+```
+Le p-value = 0.4254 > 0.05 se qui nous dit qu'il n'y a pas de lien entre les pays 
+
+et les régions dans le context de cette étude. 
+
+
+
+### Association entre variables quantitatives
+
+```{r}
+
+plot(wh$GDP, wh$PositiveAffect,
+     xlab="PIB",
+     ylab= "Positive Effect",
+     collor = "blue" )
+```
+
+
+Nous observons une relations entre PIB et positive effect. Mais le nuage de points que 
+
+nous avons ne nous permet pas de faait une conclusion quand la qualité de la rélation 
+
+qu'ils ont Nous allons donc éffectuer un test de dépendence pour voir s'il y'a une lien 
+
+entre ses deux variables
+
+
+```{r}
+cor.test(wh$GDP, wh$PositiveAffect)
+```
+
+
+Après avoir éffectuer un test de corrélation , nous obtenons un valeur de 0.277 qui 
+
+indique un faible rapport entre le bohneur des population et le PIB. 
+
+
+Et nous pouvons déduire que la bonne hummeus des populations dans les differente 
+
+régions ne dépand pas de leurs pouvoir d'achat
+
+
+```{r}
+plot(wh$Health, wh$Happiness,
+     xlab="santé",
+     ylab= "bohneur",
+     collor = "blue" )
+```
+
+Nous constatons qu'il y'a une assez forte relation entre la santé des popultions dans les 
+
+
+différentes région et leur bohneur. Nous allons éffetuer un test de correlation pour 
+
+vérifier cette interpretation
+
+```{r}
+cor.test(wh$Health, wh$Happiness)
+```
+Se test de correlation nous donne une valeur de 0,758 se qui est assez proch de 1 et nous 
+
+pouvons donc en déduire que le bohneur des populations dans les différentes région 
+
+est fortement lié a leurs santé.
+
+
+### Association entre variables categorielles et quantitatives
+
+
+
+```{r}
+boxplot(wh$Happiness~wh$Region)
+```
+
+Le graphique nous montre une association entre les regions et le bonheur des habitants 
+
+de ses regions. Nous allons confimer notre suposition avec un test de anova 
+
+
+```{r}
+
+anova(aov(wh$Happiness~wh$Region))
+```
+
+Le test de Anova effcetuer si dessus nous montre qu'il y a une association entre les 
+
+regions et le bonheur. Donc nous pouvons dire que le bohneur d'une personne dépend de 
+
+là où cette personne vie.
+
+
+
+
+
+## D 
+
+L'nalyse si dessus nous montre que hapinness est lié au regions. 
+
+Nous avons aussi vu que happiness est fortement lié a la santé(health)
+
+
+Nous allons étudié les association entre health et social support, freedom, corruption, 
+
+et confidence in government
+
+
+
+par(mfrow=c(1,1))  #pour faire deux graphes
+barplot(tab, col=rainbow(6))
+pie(tab, col=rainbow(6))
+
+```{r}
+
+par(mfrow=c(2,2)) 
+
+plot(wh$SocialSupport, wh$Happiness,
+     col = "blue" )
+
+plot(wh$Freedom, wh$Happiness,
+     col = "red" )
+
+plot(wh$Corruption, wh$Happiness,
+     col = "green" )
+
+plot(wh$Generosity, wh$Happiness,
+     col = "orange"  )
+
+
+
+```
+
+
+En observant les graphiqes ci dessus nous observons qu'il peut avoir une relation entre 
+
+hapiness et social support ainsi etre hapiness et freedom. 
+
+La rélation entre happines et corruption et happiness et generosity n'est pas très claire.
+
+Nous allons verifier sa avec des test de correlation
+
+
+```{r}
+cor.test(wh$Happiness,wh$SocialSupport)
+cor.test(wh$Happiness,wh$Freedom)
+cor.test(wh$Happiness,wh$Generosity)
+cor.test(wh$Happiness,wh$Corruption)
+```
+
+
+Les test de correlation nous montre qu'il y a une forte correlation entre happiness et 
+
+social support et suivi par la rélation entre hapiness et freedom. 
+
+La rélation entre happiness et genersity est assez faible et celle entre 
+
+happiness et corruption est negative. 
+
+Nous pouvont conclure que plus les gens soont assister socialement et libre plus il se 
+
+sente heureux. Par contre la genenorité n'a pas un impact fort sur le bohneur des gens. 
+
+Nous remarquon aussi que la corruption a un impact negatives sur le bohneur des population
+
+raison pour laquelle on a eu une correlation negative.
+
+
+```{r}
+plot(wh$Happiness,wh$GDP)
+```
+
+Le graphique nous montre une relation entre happiness et GDP se qui nous montre qu'une
+
+regression linear peur etre une bonne idée dans cette situation 
+
+
+```{r}
+rl = lm(wh$Happiness~wh$GDP, data=wh)
+summary(rl)
+```
+L'équation de la droite est:
+
+Happiness = -1.14430 + 0.71392*GDP
+
+
+La valeur de R-square nous dit dit que le PIB peut prédire le bohneur des population
+
+avec une précision de 59%. Se qui nous montre un lien entre le PIB et le bohneur. 
+
+Mais le p-value qui est plus petit que 0.05 nous montre que la valeur de le GDP
+
+ne prédit pas très bien le bohneur.
+
+
+
+Nous allons maintenant éffectuer une régression mutilple
+
+
+```{r}
+mlr = lm(wh$Happiness~wh$Freedom+wh$SocialSupport+wh$Corruption+wh$Generosity, data = wh)
+summary(mlr)
+```
+Le résultat de cette régréssion mutilple nous montre que les generosity, freedom, 
+
+corruption et socialsupport mis ensemble predit hapinnes moin bien que generosity seul.
+
+Mais ses parametre mis ensemble on un meilleur R-square value que GDP seul.
+
+Nous pouvons alors en déduire que un des facteur les plus pertinent pour le bohneur 
+
+des population c'est la générosité
+
+
+```{r}
+#install.packages("rworldmap")
+#library(rworldmap)
+```
+
+
+```{r}
+#library(ggplot2)
+```
+
+```{r}
+##install.packages("RColorBrewer")
+#library(RColorBrewer)
+```
+
+
+
+## E
+
+```{r}
+hist(wh$Happiness)
+```
+Le histogram nous montre une allure qui peur etre normal. Nous allons éffcetuer un test
+
+de normalité pour voir si elle suit une lois normal, c'est-a-dire si elle se comporte 
+
+normalement. 
+
+```{r}
+shapiro.test(wh$Happiness)
+```
+
+Le p-value optenue est supérieur a 0.05 dinc nous pouvont en déduire que la variable 
+
+hapiness suit une lois normal
+
+
